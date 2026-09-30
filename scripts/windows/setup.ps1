@@ -13,6 +13,8 @@ param(
     [switch]$SkipSearch
 )
 $ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"   # Windows PowerShell 5.1 downloads are very slow with the progress bar
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $Root = Resolve-Path "$PSScriptRoot\..\.."
 Set-Location $Root
 
@@ -26,12 +28,17 @@ nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader
 
 Step "Downloading latest llama.cpp CUDA build"
 # RTX 50xx (Blackwell, sm_120) needs a build made with CUDA >= 12.8.
-$release = Invoke-RestMethod "https://api.github.com/repos/ggml-org/llama.cpp/releases/latest"
-$builds = $release.assets | Where-Object { $_.name -match '^llama-.*-bin-win-cuda-(\d+)\.(\d+)-x64\.zip$' } |
-    ForEach-Object { [pscustomobject]@{ Asset = $_; Ver = [version]"$($Matches[1]).$($Matches[2])" } } |
-    Where-Object { $_.Ver -ge [version]"12.8" } | Sort-Object Ver -Descending
-if (-not $builds) { throw "No Windows CUDA >= 12.8 build found in llama.cpp $($release.tag_name)" }
-$build = $builds[0]
+# "releases/latest" can be a versioned release (e.g. v0.5.0) that only carries a pointer to a nightly build,
+# so scan recent releases and take the newest one that ships a Windows x64 CUDA zip.
+$releases = Invoke-RestMethod "https://api.github.com/repos/ggml-org/llama.cpp/releases?per_page=20"
+$release = $null; $build = $null
+foreach ($r in $releases) {
+    $builds = $r.assets | Where-Object { $_.name -match '^llama-.*-bin-win-cuda-(\d+)\.(\d+)-x64\.zip$' } |
+        ForEach-Object { [pscustomobject]@{ Asset = $_; Ver = [version]"$($Matches[1]).$($Matches[2])" } } |
+        Where-Object { $_.Ver -ge [version]"12.8" } | Sort-Object Ver -Descending
+    if ($builds) { $release = $r; $build = @($builds)[0]; break }
+}
+if (-not $build) { throw "No Windows CUDA >= 12.8 build found in the last 20 llama.cpp releases" }
 $cudart = $release.assets | Where-Object { $_.name -match "^cudart-.*win-cuda-$([regex]::Escape($build.Ver.ToString()))-x64\.zip$" } | Select-Object -First 1
 
 $binDir = Join-Path $Root "bin\llama.cpp"
