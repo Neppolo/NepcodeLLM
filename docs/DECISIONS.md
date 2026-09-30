@@ -44,3 +44,8 @@ Each entry: date, decision, why, and what would make us revisit it.
   that supports OpenAI-compatible local servers and MCP, and runs fine inside VS Code's terminal.
 - **Revisit when:** tool-calling reliability with the local model is poor in OpenCode (then try Qwen Code,
   which is tuned for Qwen models).
+
+## 2026-09-30 - Search works without Docker (ddgs fallback)
+- **Why:** Docker Desktop is a heavy install just for search. `web_search` now uses SearXNG when it is running
+  and otherwise the `ddgs` metasearch library (free, no key). SearXNG stays the more private option.
+- **Revisit when:** ddgs gets rate-limited or its results are poor in freshness evals.

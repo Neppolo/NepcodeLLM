@@ -9,7 +9,8 @@ commands as an agent, so no IDE extension is needed.
 1. Install: `npm install -g opencode-ai` (needs Node.js), or see the OpenCode docs for other installers.
 2. Copy `opencode.json` from this folder to `%USERPROFILE%\.config\opencode\opencode.json` (global) or into
    a Java project's root (per project). Replace `C:/path/to/NepcodeLLM` with your clone path (forward slashes are fine).
-3. Start the model (`scripts\windows\serve.ps1`) and SearXNG (Docker), then run `opencode` in your project folder.
+3. Start the model (`scripts\windows\serve.ps1`), then run `opencode` in your project folder. (SearXNG in Docker is
+   optional; without it web search uses the built-in ddgs backend.)
 
 What the config does:
 - `provider.nepcode`: points OpenCode at llama-server (`http://127.0.0.1:8080/v1`, model `nepcode`).

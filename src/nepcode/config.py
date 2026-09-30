@@ -31,6 +31,8 @@ def _repo_root() -> Path:
 
 @dataclass(frozen=True)
 class Settings:
+    # "auto": SearXNG if it answers, otherwise the ddgs metasearch library (no Docker, no API key).
+    search_backend: str = field(default_factory=lambda: os.environ.get("NEPCODE_SEARCH_BACKEND", "auto"))
     searxng_url: str = field(default_factory=lambda: os.environ.get("NEPCODE_SEARXNG_URL", "http://localhost:8888"))
     data_dir: Path = field(default_factory=lambda: Path(os.environ.get("NEPCODE_DATA_DIR", _repo_root() / "data")))
     kb_dir: Path = field(default_factory=lambda: Path(os.environ.get("NEPCODE_KB_DIR", _repo_root() / "knowledge")))

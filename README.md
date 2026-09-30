@@ -25,6 +25,7 @@ Decisions and their reasons are in [docs/DECISIONS.md](docs/DECISIONS.md); the p
    GPU (8 GB): attention, shared weights,      fetch_url   -> page -> clean Markdown (cached)
      KV cache, some expert layers              kb_search   -> SQLite FTS5 over knowledge/ + saved notes
    RAM: remaining routed experts (--n-cpu-moe) kb_save_note-> verified findings persist for next time
+                                               (no Docker? web_search falls back to the ddgs library)
 ```
 
 **Why this model:** MoE with 35B total but ~3B active parameters per token. Quality comes from the 35B, speed
@@ -36,7 +37,8 @@ IDE. After 30% expert pruning: ~15 GB total, more layers on the GPU.
 
 ## Quick start (Windows)
 
-Prerequisites: NVIDIA driver (recent, for RTX 50xx), Python 3.11+, Git, Docker Desktop (for web search).
+Prerequisites: NVIDIA driver (recent, for RTX 50xx), Python 3.11+, Git, ~40 GB free disk.
+Docker Desktop is optional: without it, web search uses the `ddgs` library instead of a local SearXNG.
 
 ```powershell
 git clone <this repo>; cd NepcodeLLM

@@ -55,19 +55,25 @@ Write-Host "  llama.cpp $($release.tag_name) (CUDA $($build.Ver)) -> $binDir"
 Step "Creating Python venv for the tools layer"
 if (-not (Test-Path ".venv")) { python -m venv .venv }
 & .\.venv\Scripts\python -m pip install --upgrade pip --quiet
-& .\.venv\Scripts\pip install -e ".[dev,prune]" "huggingface_hub[cli]" --quiet
+& .\.venv\Scripts\pip install -e ".[dev,prune]" "huggingface_hub" --quiet
 & .\.venv\Scripts\nepcode index
 
 if (-not $SkipModel) {
     Step "Downloading $ModelRepo ($Quant) - about 20 GB"
     # Only the language model: the vision projector (mmproj) is not downloaded, which is the first 'useless weight' we drop.
+    $free = (Get-PSDrive (Split-Path -Qualifier $Root).TrimEnd(':')).Free / 1GB
+    if ($free -lt 25) { Write-Warning ("Only {0:N1} GB free on this drive; the model needs ~22 GB (pruned variants ~15 GB more)." -f $free) }
     & .\.venv\Scripts\hf download $ModelRepo --include "*$Quant*.gguf" --exclude "*mmproj*" --local-dir "models\base"
+    $gguf = Get-ChildItem models\base -Recurse -Filter *.gguf | Where-Object { $_.Name -notmatch "mmproj" }
+    if (-not $gguf) { throw "Model download failed: no .gguf in models\base" }
+    $gguf | ForEach-Object { Write-Host ("  {0}  {1:N2} GB" -f $_.Name, ($_.Length / 1GB)) }
 }
 
 if (-not $SkipSearch) {
-    Step "Starting SearXNG (Docker)"
+    Step "Starting SearXNG (Docker, optional)"
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-        Write-Warning "Docker not found: install Docker Desktop, then run: docker compose -f infra\searxng\docker-compose.yml up -d"
+        Write-Host "  Docker not found: web search will use the built-in ddgs backend instead (no setup needed)."
+        Write-Host "  Optional: install Docker Desktop later and re-run setup for a private SearXNG instance."
     } else {
         $envFile = "infra\searxng\.env"
         if (-not (Test-Path $envFile)) {
