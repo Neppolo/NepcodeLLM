@@ -6,10 +6,12 @@
   Attention, shared experts and KV cache stay on the GPU; the routed experts of the first -NCpuMoe layers are
   kept in system RAM (--n-cpu-moe). Only ~3B parameters are active per token, so DDR5 bandwidth keeps
   generation fast. Tune -NCpuMoe with tune.ps1: lower = more on the GPU = faster, until VRAM runs out.
+  If VRAM overflows, Windows silently spills into shared memory and speed drops 3-5x: raise -NCpuMoe.
 #>
 param(
     [string]$Model,
-    [int]$NCpuMoe = 30,
+    [int]$NCpuMoe = 33,         # RTX 5060 Ti 8 GB: 30 is the fastest that fits in a short benchmark, +3 for the 64K KV cache
+    [int]$UBatch = 512,         # larger = faster prompt processing, more VRAM; pick with tune.ps1 phase 2
     [int]$Ctx = 65536,
     [int]$Threads = 6,          # i5-14400F: 6 performance cores
     [int]$Port = 8080,
@@ -26,6 +28,7 @@ $llamaArgs = @(
     "--n-cpu-moe", $NCpuMoe,
     "--flash-attn", "on",
     "--ctx-size", $Ctx,
+    "--ubatch-size", $UBatch, "--batch-size", [math]::Max($UBatch, 2048),
     "--cache-type-k", "q8_0", "--cache-type-v", "q8_0",
     "--threads", $Threads,
     "--jinja",                  # use the model's chat template: required for tool calling

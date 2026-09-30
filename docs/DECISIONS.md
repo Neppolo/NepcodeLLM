@@ -49,3 +49,18 @@ Each entry: date, decision, why, and what would make us revisit it.
 - **Why:** Docker Desktop is a heavy install just for search. `web_search` now uses SearXNG when it is running
   and otherwise the `ddgs` metasearch library (free, no key). SearXNG stays the more private option.
 - **Revisit when:** ddgs gets rate-limited or its results are poor in freshness evals.
+
+## 2026-09-30 - First benchmark on the target PC (base model, UD-Q4_K_XL, llama.cpp b11146, CUDA 13.4 build)
+| --n-cpu-moe | prompt tok/s | generation tok/s |
+|---|---|---|
+| 36 | 195 | 42.8 |
+| 33 | 208 | 44.4 |
+| 30 | 313 | 44.8 |
+| 27 | 59 | 14.0 (VRAM overflow into shared memory) |
+| 24 | 61 | 12.0 (overflow) |
+| 21 | 61 | 8.1 (overflow) |
+- **Result:** speed goal met: ~44 tok/s generation, 1.5x the 30 tok/s target, before any pruning.
+- **Serve default:** `-NCpuMoe 33` (only 0.4 tok/s slower than 30, leaves ~1.3 GB for the 64K-context KV cache).
+- **Finding:** on Windows, VRAM overflow does not fail, it spills into shared memory at 3-5x lower speed.
+  Pruning's benefit here is real: fewer experts per layer means more layers fit before the overflow cliff.
+- **Next bottleneck:** prompt processing (~200-300 tok/s) for long agentic prompts; tune.ps1 phase 2 tests larger micro-batches.
