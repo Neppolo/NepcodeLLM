@@ -81,3 +81,13 @@ Phase 2 at `--n-cpu-moe 33`, 4K-token prompt:
 - **Decision:** serve with `-NCpuMoe 33 -UBatch 1024` (now the `serve.ps1` defaults): ~48 tok/s generation,
   ~720 tok/s prompt, so a 10K-token agentic prompt is read in ~14 s instead of ~40 s.
 - 2048 is slower than 1024 at this setting: its bigger compute buffer likely pushes VRAM to the limit.
+
+## 2026-09-30 - First OpenCode session looped and ran out of context: 128K context + guardrails
+- **Symptom:** on an open-ended "build + research best practices" task, the model looped and hit the context limit.
+- **Causes:** 64K context (Qwen advises >= 128K for this model; OpenCode also reserves 16K of it for output),
+  fetched pages up to 60K characters each, no repetition penalty.
+- **Changes:** `serve.ps1` defaults to 128K context with `-NCpuMoe 35` (the hybrid attention model's KV cache is
+  small: ~0.7 GB extra for 128K at q8_0), 2 slots sharing one KV pool, presence penalty 0.5;
+  `fetch_url` returns 8000 characters per call with paging; `web_search` returns 5 results by default;
+  system prompt sets a research budget and "never repeat an identical tool call".
+- **Revisit when:** loops persist (raise presence penalty toward 1.5, or try `-NoThink`).

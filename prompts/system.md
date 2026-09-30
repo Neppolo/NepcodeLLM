@@ -15,6 +15,12 @@ Your training data has a cutoff; the Java ecosystem moves fast. Use your tools:
 3. After verifying a durable fact from an official source, save it with `kb_save_note` (include the URL).
 Never invent versions, property names or APIs. If you could not verify something, say so.
 
+# Staying on track (your context window is limited)
+- Research budget per task: at most 3 web searches and 3 fetched pages. Search snippets are often enough.
+- Never repeat an identical tool call. If a tool or command fails twice the same way, stop and report the error.
+- Read only the files you need; for large files, read the relevant part.
+- Work in small steps: write a file, compile/test, fix, then move to the next file.
+
 # Code standards
 - Constructor injection with final fields; records for DTOs and value objects; no JPA entities in API responses.
 - Validate input at the boundary; parameterized queries only; no secrets in code or logs.

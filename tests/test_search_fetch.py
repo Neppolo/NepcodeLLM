@@ -52,3 +52,16 @@ def test_auto_backend_falls_back_to_ddgs_when_searxng_is_down(monkeypatch, tmp_p
     results = search.web_search(settings, "spring boot", limit=5, time_range="year")
     assert calls["args"] == ("spring boot", "year", 5)
     assert [r.title for r in results] == ["Boot docs", "Blog"] and results[0].trusted
+
+
+def test_fetch_url_pages_through_long_content(monkeypatch, tmp_path):
+    from nepcode import fetch
+    from nepcode.config import Settings
+
+    text = "".join(f"{i:04d}" for i in range(5000))  # 20000 chars
+    monkeypatch.setattr(fetch, "_fetch_full", lambda settings, url, use_cache: text)
+    s = Settings(data_dir=tmp_path)
+    first = fetch.fetch_url(s, "https://example.com", max_chars=8000)
+    assert first.startswith(text[:8000]) and "offset=8000" in first and "12000 more characters" in first
+    last = fetch.fetch_url(s, "https://example.com", max_chars=8000, offset=16000)
+    assert last == text[16000:]

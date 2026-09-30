@@ -15,6 +15,7 @@ Research tools for a Java / Spring coding assistant.
 - Use web_search + fetch_url when the question involves versions, release notes, deprecations, CVEs,
   or anything that may have changed after your training data. Prefer official docs (marked trusted).
 - After verifying something new and durable from an official source, save it with kb_save_note.
+- Budget: context is limited. Prefer snippets from web_search; fetch at most 2-3 pages per task.
 """
 
 settings = get_settings()
@@ -23,16 +24,17 @@ mcp = MCPServer("nepcode", instructions=INSTRUCTIONS)
 
 
 @mcp.tool()
-def web_search(query: str, limit: int = 8, time_range: str | None = None) -> list[dict]:
+def web_search(query: str, limit: int = 5, time_range: str | None = None) -> list[dict]:
     """Search the web. time_range: optional 'day' | 'month' | 'year' to get only recent results.
     Results from official documentation sites are marked trusted and listed first."""
-    return [r.to_dict() for r in _web_search(settings, query, limit=min(limit, 20), time_range=time_range)]
+    return [r.to_dict() for r in _web_search(settings, query, limit=min(limit, 10), time_range=time_range)]
 
 
 @mcp.tool()
-def fetch_url(url: str, max_chars: int = 20000) -> str:
-    """Fetch a page and return its main content as Markdown (navigation and ads removed, code kept)."""
-    return _fetch_url(settings, url, max_chars=min(max_chars, 60000))
+def fetch_url(url: str, offset: int = 0) -> str:
+    """Fetch a page's main content as Markdown (navigation and ads removed, code kept), 8000 characters at a time.
+    If the page is longer, the result ends with the offset to pass for the next part; only continue if needed."""
+    return _fetch_url(settings, url, max_chars=8000, offset=max(offset, 0))
 
 
 @mcp.tool()
