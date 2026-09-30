@@ -10,7 +10,8 @@ version on the eval suite (`eval/`).
 - [x] Windows scripts: setup (llama.cpp CUDA + model + SearXNG), tune (`--n-cpu-moe` sweep), serve
 - [x] Java-specialist system prompt
 - [ ] **You:** run setup + tune on your PC, report tok/s and VRAM use
-- [ ] Connect a client (Cline / Continue / OpenCode), use it for real work, export conversations (they become calibration traces)
+- [x] OpenCode (terminal) config: local model + research tools + system prompt
+- [ ] Connect OpenCode, use it for real work, export sessions (they become calibration traces)
 
 ## Phase 2 - Knowledge that stays current
 - [ ] Knowledge base ingestion: crawl + chunk official docs (Spring Boot reference, JDK release notes, OWASP cheat sheets)
@@ -24,10 +25,11 @@ version on the eval suite (`eval/`).
 - [ ] Task sets: MultiPL-E Java, Spring tasks, planted-issue reviews, freshness questions, agentic repo tasks
 - [ ] Baseline scores for the base model (the number every later change must beat)
 
-## Phase 4 - Smaller: prune + quantize
-- [ ] Calibration set from Java repos + your agentic traces (`pruning/build_calibration.py`)
-- [ ] REAP at 25 / 30 / 35% on a rented GPU, imatrix Q4 quants
-- [ ] Eval all variants, keep the smallest one within noise of the base
+## Phase 4 - Smaller: prune (local, free)
+- [x] Calibration set builder (`pruning/build_calibration.py`)
+- [x] Local REAP scorer on the quantized GGUF (`pruning/reap-score`, llama.cpp) + bit-exact expert cutter (`pruning/prune_experts.py`), tested on a synthetic MoE
+- [ ] First real run on Qwen3.6-35B-A3B on your PC (build-reap.ps1, prune.ps1)
+- [ ] Variants at 25 / 30 / 35%; eval all, keep the smallest one within noise of the base
 - [ ] Try speculative decoding with the model's MTP head if llama.cpp support is solid on this architecture
 
 ## Phase 5 - Specialize (only if evals show gaps)

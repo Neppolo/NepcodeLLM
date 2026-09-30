@@ -1,6 +1,28 @@
-# Connecting a coding client
+# Connecting a client
 
-The model is served by `scripts/windows/serve.ps1` as an **OpenAI-compatible** API:
+Primary setup: **OpenCode** in the terminal (standalone, or inside VS Code's integrated terminal).
+It is open source, works with any OpenAI-compatible server, supports MCP tools, and edits files / runs
+commands as an agent, so no IDE extension is needed.
+
+## OpenCode (recommended)
+
+1. Install: `npm install -g opencode-ai` (needs Node.js), or see the OpenCode docs for other installers.
+2. Copy `opencode.json` from this folder to `%USERPROFILE%\.config\opencode\opencode.json` (global) or into
+   a Java project's root (per project). Replace `C:/path/to/NepcodeLLM` with your clone path (forward slashes are fine).
+3. Start the model (`scripts\windows\serve.ps1`) and SearXNG (Docker), then run `opencode` in your project folder.
+
+What the config does:
+- `provider.nepcode`: points OpenCode at llama-server (`http://127.0.0.1:8080/v1`, model `nepcode`).
+  Keep `limit.context` equal to `serve.ps1 -Ctx`.
+- `instructions`: loads `prompts/system.md` (Java specialist + research policy) in every session.
+- `mcp.nepcode`: the research tools (`web_search`, `fetch_url`, `kb_search`, `kb_save_note`).
+
+Per-project rules: put an `AGENTS.md` in a Java project's root (build command, Java version, conventions);
+OpenCode reads it automatically. `/init` inside OpenCode can generate a first version.
+
+## Other clients
+
+Any client with OpenAI-compatible endpoints + MCP works with the same two pieces:
 
 | Setting  | Value                        |
 |----------|------------------------------|
@@ -8,15 +30,8 @@ The model is served by `scripts/windows/serve.ps1` as an **OpenAI-compatible** A
 | Model    | `nepcode`                    |
 | API key  | any non-empty string         |
 
-The research tools are an **MCP server** (`nepcode serve`, stdio). `mcp-servers.json` is the standard
-`mcpServers` block used by Cline, Roo Code, Claude Desktop-style configs and others; fix the path and paste it
-into your client's MCP settings. Paste `prompts/system.md` as the custom system prompt / rules.
+`mcp-servers.json` is the standard `mcpServers` block (Cline, Roo Code and others).
+Alternatives: Qwen Code (terminal, tuned for Qwen models), Cline or Continue (VS Code extensions).
 
-Recommended clients for agentic coding with a local model (all support OpenAI-compatible endpoints + MCP):
-- **Cline / Roo Code** (VS Code) - agent that edits files and runs commands.
-- **Continue** (VS Code / IntelliJ) - chat + agent; good if you live in IntelliJ for Java.
-- **OpenCode** / **Aider** (terminal).
-
-Client settings that matter for a local model:
-- Set the context window to the value you pass to `serve.ps1 -Ctx` (default 65536).
-- Keep the client's tool/MCP list small: every tool description costs prompt tokens and prompt processing time.
+Tip for local models: keep the number of enabled MCP tools small. Every tool description costs prompt tokens,
+and prompt processing is the slowest part when experts live in RAM.

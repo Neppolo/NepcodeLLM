@@ -10,7 +10,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+prune = ["gguf>=0.17", "numpy>=1.26"]
+dev = ["pytest>=8", "gguf>=0.17", "numpy>=1.26"]
 
 [project.scripts]
 nepcode = "nepcode.cli:main"

@@ -2,9 +2,10 @@
 $Root = Resolve-Path "$PSScriptRoot\..\.."
 $LlamaBin = Join-Path $Root "bin\llama.cpp"
 
-function Find-Model([string]$Dir = "models") {
+function Find-Model([string]$Dir = "models", [switch]$BaseOnly) {
     # Prefer a pruned/custom build in models\nepcode, fall back to the base download. Skip vision projectors.
-    foreach ($sub in "nepcode", "base") {
+    $subs = if ($BaseOnly) { @("base") } else { @("nepcode", "base") }
+    foreach ($sub in $subs) {
         $path = Join-Path $Root "$Dir\$sub"
         if (Test-Path $path) {
             $gguf = Get-ChildItem $path -Recurse -Filter *.gguf | Where-Object { $_.Name -notmatch "mmproj" } |

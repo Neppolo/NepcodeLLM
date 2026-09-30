@@ -9,15 +9,15 @@ Target machine: RTX 5060 Ti 8 GB, 32 GB DDR5-6600, i5-14400F, Windows. Target sp
 
 Training a model from scratch that beats the best open models is not possible on consumer hardware, so we start
 from the strongest open coding model that runs fast on this PC and make it better *for our use* instead:
-remove what we do not use (vision encoder, MoE experts that never fire on Java work), quantize with a
-Java-calibrated importance matrix, and give it tools to look things up (web search, official docs, a local
+remove what we do not use (vision encoder, MoE experts that barely contribute on Java work, found with REAP
+and cut locally from the quantized file, with no cloud GPU), and give it tools to look things up (web search, official docs, a local
 knowledge base of best practices that grows over time). Every change is measured on our own Java eval suite.
 Decisions and their reasons are in [docs/DECISIONS.md](docs/DECISIONS.md); the plan is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Architecture
 
 ```
- IDE / terminal client (Cline, Continue, OpenCode)
+ OpenCode (terminal, or VS Code's terminal)
    |  OpenAI-compatible API                       |  MCP (stdio)
    v                                              v
  llama-server (llama.cpp, CUDA)              nepcode MCP server (Python)
@@ -45,8 +45,9 @@ powershell -ExecutionPolicy Bypass -File scripts\windows\tune.ps1    # finds the
 powershell -ExecutionPolicy Bypass -File scripts\windows\serve.ps1 -NCpuMoe <best value>
 ```
 
-Then connect your client: see [clients/README.md](clients/README.md). Use [prompts/system.md](prompts/system.md)
-as the system prompt.
+Then install OpenCode and copy [clients/opencode.json](clients/opencode.json) into place: see
+[clients/README.md](clients/README.md). Optional, later: prune the model locally with `scripts\windows\prune.ps1`
+(see [pruning/README.md](pruning/README.md)).
 
 ## Repository layout
 
@@ -55,9 +56,9 @@ as the system prompt.
 | `src/nepcode/` | Tools layer: search, fetch, knowledge base, MCP server, CLI (`nepcode serve / index / search / web / fetch`) |
 | `knowledge/` | Curated best-practice notes (Markdown), indexed by `nepcode index` |
 | `prompts/` | System prompt for the model |
-| `scripts/windows/` | Setup, tuning and serving scripts |
+| `scripts/windows/` | Setup, tune, serve, build-reap and prune scripts |
 | `infra/searxng/` | Self-hosted search engine config |
-| `pruning/` | Calibration set builder and REAP + imatrix pipeline |
+| `pruning/` | Calibration set builder, local REAP scorer (C++, llama.cpp) and GGUF expert cutter |
 | `eval/` | Java evaluation suite (Phase 3) |
 | `clients/` | Client connection examples |
 | `docs/` | Decisions and roadmap |

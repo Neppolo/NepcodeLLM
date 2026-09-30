@@ -48,7 +48,7 @@ Write-Host "  llama.cpp $($release.tag_name) (CUDA $($build.Ver)) -> $binDir"
 Step "Creating Python venv for the tools layer"
 if (-not (Test-Path ".venv")) { python -m venv .venv }
 & .\.venv\Scripts\python -m pip install --upgrade pip --quiet
-& .\.venv\Scripts\pip install -e ".[dev]" "huggingface_hub[cli]" --quiet
+& .\.venv\Scripts\pip install -e ".[dev,prune]" "huggingface_hub[cli]" --quiet
 & .\.venv\Scripts\nepcode index
 
 if (-not $SkipModel) {

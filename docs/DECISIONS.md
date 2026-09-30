@@ -18,7 +18,7 @@ Each entry: date, decision, why, and what would make us revisit it.
 - **Revisit when:** evals show a systematic Java weakness that prompts + RAG cannot fix. Then: QLoRA on
   curated, verified Java data, measured against the eval suite.
 
-## 2026-09-30 - Size reduction: drop vision + REAP ~30% experts + imatrix Q4, "quality first"
+## 2026-09-30 - Size reduction: drop vision + REAP ~30% experts, "quality first" (updated below)
 - **Why:** user wants maximum quality in minimum space. Vision is unused (free win). REAP pruning with
   domain calibration removes experts that do not fire on Java work. Keep ~70% of experts to stay within noise.
 - **Revisit when:** evals show the pruned model loses on any category; then prune less (20-25%).
@@ -31,3 +31,16 @@ Each entry: date, decision, why, and what would make us revisit it.
 
 ## 2026-09-30 - Primary stack: Java + Spring
 - Calibration data, knowledge base and evals focus on Java 21/25, Spring Boot 3/4, JPA, Maven/Gradle, JUnit.
+
+## 2026-09-30 - Pruning runs locally, on the quantized GGUF (no cloud GPU)
+- **Why:** user wants to avoid paying for cloud GPUs. The reference REAP needs BF16 weights (~70 GB) on one GPU.
+  Our `llama-reap-score` computes the same REAP criterion through llama.cpp on the Q4 GGUF with RAM offload, and
+  `prune_experts.py` slices experts out of the quantized tensors (bit-exact, no re-quantization).
+- **Risk:** scores come from a 4-bit model. Mitigated by evals (base vs pruned).
+- **Revisit when:** a pruned model loses on evals; then compare against the reference REAP on a rented GPU once.
+
+## 2026-09-30 - Client: OpenCode in the terminal
+- **Why:** user works in VS Code but wants a terminal-only option. OpenCode is an open-source terminal agent
+  that supports OpenAI-compatible local servers and MCP, and runs fine inside VS Code's terminal.
+- **Revisit when:** tool-calling reliability with the local model is poor in OpenCode (then try Qwen Code,
+  which is tuned for Qwen models).

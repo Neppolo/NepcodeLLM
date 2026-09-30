@@ -1,0 +1,28 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "nepcode": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "NepcodeLLM (local llama.cpp)",
+      "options": {
+        "baseURL": "http://127.0.0.1:8080/v1"
+      },
+      "models": {
+        "nepcode": {
+          "name": "Nepcode (Qwen3.6-35B-A3B)",
+          "limit": { "context": 65536, "output": 16384 }
+        }
+      }
+    }
+  },
+  "model": "nepcode/nepcode",
+  "instructions": ["C:/path/to/NepcodeLLM/prompts/system.md"],
+  "mcp": {
+    "nepcode": {
+      "type": "local",
+      "command": ["C:/path/to/NepcodeLLM/.venv/Scripts/nepcode.exe", "serve"],
+      "environment": { "NEPCODE_SEARXNG_URL": "http://localhost:8888" },
+      "enabled": true
+    }
+  }
+}
