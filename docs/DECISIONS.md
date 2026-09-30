@@ -64,3 +64,6 @@ Each entry: date, decision, why, and what would make us revisit it.
 - **Finding:** on Windows, VRAM overflow does not fail, it spills into shared memory at 3-5x lower speed.
   Pruning's benefit here is real: fewer experts per layer means more layers fit before the overflow cliff.
 - **Next bottleneck:** prompt processing (~200-300 tok/s) for long agentic prompts; tune.ps1 phase 2 tests larger micro-batches.
+- **Accidental data point (all experts in RAM, `--n-cpu-moe` above the layer count):** 37.1 tok/s generation;
+  prompt 249 / 380 / 587 tok/s with micro-batch 512 / 1024 / 2048 (4K-token prompt). So micro-batch 2048
+  more than doubles prompt speed, and even with every expert in RAM generation stays above the 30 tok/s goal.

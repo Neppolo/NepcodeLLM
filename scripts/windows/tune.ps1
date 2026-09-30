@@ -13,18 +13,23 @@
 
 .EXAMPLE
   scripts\windows\tune.ps1
-  scripts\windows\tune.ps1 -Values 34,33,32,31 -SkipBatch
+  scripts\windows\tune.ps1 -Values "34,33,32,31" -SkipBatch
 #>
 param(
     [string]$Model,
-    [int[]]$Values = @(36, 33, 30, 27, 24, 21),
-    [int[]]$UBatches = @(512, 1024, 2048),
+    # Comma-separated strings: with "powershell -File", "-Values 33,30" arrives as one string, and a cast to int
+    # would read it as 3330 (comma as thousands separator). Parse explicitly instead.
+    [string]$Values = "36,33,30,27,24,21",
+    [string]$UBatches = "512,1024,2048",
     [int]$Headroom = 3,        # serve.ps1 uses a long context (bigger KV cache), so keep this many layers' experts off the GPU
     [int]$Threads = 6,
     [switch]$SkipBatch
 )
 $ErrorActionPreference = "Stop"
 . "$PSScriptRoot\common.ps1"
+function ConvertTo-IntList([string]$s) { @($s -split '[,; ]+' | Where-Object { $_ } | ForEach-Object { [int]$_ }) }
+$ValueList = ConvertTo-IntList $Values
+$UBatchList = ConvertTo-IntList $UBatches
 if (-not $Model) { $Model = Find-Model }
 $bench = Join-Path $LlamaBin "llama-bench.exe"
 $logDir = Join-Path $Root "data"
@@ -47,7 +52,7 @@ function Invoke-Bench([string]$Name, [string[]]$BenchArgs) {
 }
 
 Write-Host "`n== Phase 1: experts in RAM (--n-cpu-moe) vs generation speed" -ForegroundColor Cyan
-$results = foreach ($n in $Values) {
+$results = foreach ($n in $ValueList) {
     Write-Host "n-cpu-moe = $n ..." -NoNewline
     $r = Invoke-Bench "ncmoe-$n" @("-ncmoe", $n, "-p", "512", "-n", "128")
     if (-not $r) { continue }
@@ -68,7 +73,7 @@ Write-Host "Fastest that fits: -NCpuMoe $fastest. For serve.ps1 use -NCpuMoe $se
 if ($SkipBatch) { return }
 
 Write-Host "`n== Phase 2: micro-batch size vs prompt speed (4096-token prompt, -NCpuMoe $serveNcmoe)" -ForegroundColor Cyan
-$batch = foreach ($ub in $UBatches) {
+$batch = foreach ($ub in $UBatchList) {
     Write-Host "ubatch = $ub ..." -NoNewline
     $b = [math]::Max($ub, 2048)
     $r = Invoke-Bench "ubatch-$ub" @("-ncmoe", $serveNcmoe, "-ub", $ub, "-b", $b, "-p", "4096", "-n", "64")
