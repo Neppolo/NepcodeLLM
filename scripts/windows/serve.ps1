@@ -16,7 +16,11 @@ param(
     [double]$PresencePenalty = 0.5,  # 0 = Qwen's coding default; raise toward 1.5 if the model repeats itself
     [int]$Threads = 6,          # i5-14400F: 6 performance cores
     [int]$Port = 8080,
-    [switch]$NoThink            # disable the thinking phase for faster, shorter answers
+    [switch]$NoThink,           # disable the thinking phase for faster, shorter answers
+    # Speculative decoding (output is identical, only speed changes):
+    #   ngram - drafts from n-grams already in the context; no download, good for code edits
+    #   mtp   - uses the model's multi-token-prediction head; needs an MTP GGUF (see docs/research/compression-and-speed.md)
+    [ValidateSet("none", "ngram", "mtp")][string]$Spec = "none"
 )
 $ErrorActionPreference = "Stop"
 . "$PSScriptRoot\common.ps1"
@@ -38,9 +42,23 @@ $llamaArgs = @(
     "--temp", "0.6", "--top-p", "0.95", "--top-k", "20", "--min-p", "0", "--presence-penalty", $PresencePenalty,
     "--host", "127.0.0.1", "--port", $Port
 )
+switch ($Spec) {
+    "ngram" {
+        # values from llama.cpp docs/speculative.md: MoE models need long drafts
+        $llamaArgs += @("--spec-type", "ngram-mod", "--spec-ngram-mod-n-match", "24",
+                        "--spec-ngram-mod-n-min", "48", "--spec-ngram-mod-n-max", "64")
+    }
+    "mtp" {
+        $llamaArgs += @("--spec-type", "draft-mtp")
+        # MTP head either inside the main GGUF, or as a separate "*mtp*.gguf" next to it
+        $sidecar = Get-ChildItem (Split-Path $Model) -Filter *.gguf |
+            Where-Object { $_.Name -match "mtp" -and $_.FullName -ne $Model } | Select-Object -First 1
+        if ($sidecar) { $llamaArgs += @("--spec-draft-model", $sidecar.FullName, "--spec-draft-ngl", "999") }
+    }
+}
 if ($NoThink) { $llamaArgs += @("--chat-template-kwargs", '{"enable_thinking":false}') }
 
-Write-Host "Model: $Model  (ctx $Ctx, n-cpu-moe $NCpuMoe, ubatch $UBatch)"
+Write-Host "Model: $Model  (ctx $Ctx, n-cpu-moe $NCpuMoe, ubatch $UBatch, spec $Spec)"
 Write-Host "Check the log for VRAM overflow: if generation is far below ~40 tok/s, restart with -NCpuMoe 37 (or -Ctx 98304)."
 Write-Host "Endpoint: http://127.0.0.1:$Port/v1  (model name: nepcode)"
 & (Join-Path $LlamaBin "llama-server.exe") @llamaArgs

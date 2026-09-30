@@ -32,6 +32,11 @@ version on the eval suite (`eval/`).
 - [ ] Variants at 25 / 30 / 35%; eval all, keep the smallest one within noise of the base
 - [ ] Try speculative decoding with the model's MTP head if llama.cpp support is solid on this architecture
 
+## Phase 4b - Speed headroom (see docs/research/compression-and-speed.md)
+- [ ] Measure `serve.ps1 -Spec ngram` vs none on the same prompt
+- [ ] Download an MTP GGUF, measure `-Spec mtp` (expected 1.4-2.2x, less with experts in RAM)
+- [ ] If headroom is real: test UD-Q5_K_XL (more precision) and a Qwen3.6-27B "slow but smart" Plan agent, via evals
+
 ## Phase 5 - Specialize (only if evals show gaps)
 - [ ] Curated, test-verified Java/Spring instruction data (generated, compiled, tests run - only passing samples kept)
 - [ ] QLoRA fine-tune (cloud GPU), merge, re-quantize, re-eval
