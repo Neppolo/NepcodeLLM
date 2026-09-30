@@ -11,11 +11,19 @@ $ErrorActionPreference = "Stop"
 . "$PSScriptRoot\common.ps1"
 if (-not $Model) { $Model = Find-Model }
 $bench = Join-Path $LlamaBin "llama-bench.exe"
+$logDir = Join-Path $Root "data"
+New-Item -ItemType Directory -Force $logDir | Out-Null
+Write-Host "Model: $Model"
 
 $results = foreach ($n in $Values) {
     Write-Host "n-cpu-moe = $n ..." -NoNewline
-    $out = & $bench -m $Model -ngl 999 -ncmoe $n -fa 1 -t $Threads -p 512 -n 128 -o json 2>$null
-    if ($LASTEXITCODE -ne 0 -or -not $out) { Write-Host " out of memory / failed"; continue }
+    # llama.cpp logs to stderr; Windows PowerShell 5.1 turns redirected stderr into errors, so relax it here
+    $log = Join-Path $logDir "tune-ncmoe-$n.log"
+    $ErrorActionPreference = "Continue"
+    $out = & $bench -m $Model -ngl 999 -ncmoe $n -fa 1 -t $Threads -p 512 -n 128 -o json 2> $log
+    $code = $LASTEXITCODE
+    $ErrorActionPreference = "Stop"
+    if ($code -ne 0 -or -not $out) { Write-Host " failed (out of VRAM?) - see $log"; continue }
     $rows = ($out | Out-String) | ConvertFrom-Json
     $pp = ($rows | Where-Object { $_.n_prompt -gt 0 }).avg_ts
     $tg = ($rows | Where-Object { $_.n_gen -gt 0 }).avg_ts
