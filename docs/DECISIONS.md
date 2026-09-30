@@ -67,3 +67,17 @@ Each entry: date, decision, why, and what would make us revisit it.
 - **Accidental data point (all experts in RAM, `--n-cpu-moe` above the layer count):** 37.1 tok/s generation;
   prompt 249 / 380 / 587 tok/s with micro-batch 512 / 1024 / 2048 (4K-token prompt). So micro-batch 2048
   more than doubles prompt speed, and even with every expert in RAM generation stays above the 30 tok/s goal.
+
+## 2026-09-30 - Tuned serving settings: -NCpuMoe 33 -UBatch 1024
+Second run (warmer system, same build): phase 1 gave 46.8 tok/s at 33 and 51.1 tok/s at 30.
+Phase 2 at `--n-cpu-moe 33`, 4K-token prompt:
+
+| micro-batch | prompt tok/s | generation tok/s |
+|---|---|---|
+| 512 | 426 | 48.0 |
+| 1024 | 723 | 48.8 |
+| 2048 | 514 | 48.4 |
+
+- **Decision:** serve with `-NCpuMoe 33 -UBatch 1024` (now the `serve.ps1` defaults): ~48 tok/s generation,
+  ~720 tok/s prompt, so a 10K-token agentic prompt is read in ~14 s instead of ~40 s.
+- 2048 is slower than 1024 at this setting: its bigger compute buffer likely pushes VRAM to the limit.

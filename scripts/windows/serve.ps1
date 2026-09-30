@@ -11,7 +11,7 @@
 param(
     [string]$Model,
     [int]$NCpuMoe = 33,         # RTX 5060 Ti 8 GB: 30 is the fastest that fits in a short benchmark, +3 for the 64K KV cache
-    [int]$UBatch = 512,         # larger = faster prompt processing, more VRAM; pick with tune.ps1 phase 2
+    [int]$UBatch = 1024,        # larger = faster prompt processing, more VRAM; pick with tune.ps1 phase 2 (1024 won on the 5060 Ti)
     [int]$Ctx = 65536,
     [int]$Threads = 6,          # i5-14400F: 6 performance cores
     [int]$Port = 8080,
