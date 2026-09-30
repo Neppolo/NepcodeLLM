@@ -1,0 +1,26 @@
+[project]
+name = "nepcode"
+version = "0.1.0"
+description = "Tools layer for NepcodeLLM: web research, doc fetching and a local best-practices knowledge base, exposed over MCP."
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=2.2,<3",
+    "httpx>=0.27",
+    "trafilatura>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+nepcode = "nepcode.cli:main"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

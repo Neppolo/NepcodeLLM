@@ -1,0 +1,15 @@
+# Self-hosted meta search engine used by the `web_search` tool. Free, no API keys, queries stay private.
+# Start: docker compose -f infra/searxng/docker-compose.yml up -d   ->  http://localhost:8888
+services:
+  searxng:
+    image: searxng/searxng:latest
+    container_name: nepcode-searxng
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8888:8080"
+    volumes:
+      - ./settings.yml:/etc/searxng/settings.yml:ro
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8888/
+      # setup.ps1 writes a random value to infra/searxng/.env
+      - SEARXNG_SECRET=${SEARXNG_SECRET:?run scripts/windows/setup.ps1 or set SEARXNG_SECRET}

@@ -1,0 +1,12 @@
+# Permissively licensed Java repositories used to build the pruning / imatrix calibration set.
+# One "owner/repo" per line. Add your own projects: calibration decides which experts survive.
+spring-projects/spring-petclinic
+spring-projects/spring-boot
+spring-projects/spring-security-samples
+spring-projects/spring-data-examples
+eugenp/tutorials
+junit-team/junit-framework
+testcontainers/testcontainers-java
+google/guava
+apache/commons-lang
+jhipster/jhipster-sample-app

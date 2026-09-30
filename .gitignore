@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+# Large artifacts: never commit weights, binaries or indexes
+models/
+bin/
+data/
+*.gguf
+*.safetensors

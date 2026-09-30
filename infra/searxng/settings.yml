@@ -1,0 +1,21 @@
+use_default_settings: true
+
+general:
+  instance_name: "nepcode-search"
+
+server:
+  limiter: false          # local-only instance, bound to 127.0.0.1
+  image_proxy: false
+
+search:
+  safe_search: 0
+  formats:
+    - html
+    - json                # required by the nepcode web_search tool
+
+engines:
+  # Developer-focused engines on top of the defaults.
+  - name: github
+    disabled: false
+  - name: stackoverflow
+    disabled: false
