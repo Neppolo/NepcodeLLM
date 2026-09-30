@@ -75,6 +75,12 @@ Low priority: our KV cache is already small. Revisit if we go beyond 128K contex
 Heavier pruning of a bigger MoE (Coder-Next REAP-50, 122B REAP + 2-bit): largest quality risk (pruning is the
 main damage source) for no benchmark gain over what we have.
 
+## 4b. Measurements
+- **ngram-mod (2026-09-30):** same OpenCode task, ~6.2K-token prompt. Without: 39.8 tok/s steady. With
+  `-Spec ngram`: 29.4 tok/s average, swinging between 8 and 50 tok/s. **Rejected**: drafts of 48-64 tokens are
+  mostly rejected in fresh code generation, and each failed verification pass reads extra experts from RAM.
+  Short-draft MTP is the remaining speculative option.
+
 ## 5. Plan
 1. E1 now: `serve.ps1 -Spec ngram` (no download) and `-Spec mtp` (needs the MTP head file); compare tok/s
    on the same prompt.

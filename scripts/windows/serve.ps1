@@ -18,9 +18,11 @@ param(
     [int]$Port = 8080,
     [switch]$NoThink,           # disable the thinking phase for faster, shorter answers
     # Speculative decoding (output is identical, only speed changes):
-    #   ngram - drafts from n-grams already in the context; no download, good for code edits
+    #   ngram - drafts from n-grams already in the context; no download. Measured SLOWER here (30 vs 40 tok/s):
+    #           rejected long drafts cost extra expert reads from RAM
     #   mtp   - uses the model's multi-token-prediction head; needs an MTP GGUF (see docs/research/compression-and-speed.md)
-    [ValidateSet("none", "ngram", "mtp")][string]$Spec = "none"
+    [ValidateSet("none", "ngram", "mtp")][string]$Spec = "none",
+    [int]$DraftMax = 3          # mtp: tokens drafted per step; with experts in RAM short drafts are safer (try 1-3)
 )
 $ErrorActionPreference = "Stop"
 . "$PSScriptRoot\common.ps1"
@@ -49,7 +51,7 @@ switch ($Spec) {
                         "--spec-ngram-mod-n-min", "48", "--spec-ngram-mod-n-max", "64")
     }
     "mtp" {
-        $llamaArgs += @("--spec-type", "draft-mtp")
+        $llamaArgs += @("--spec-type", "draft-mtp", "--spec-draft-n-max", $DraftMax)
         # MTP head either inside the main GGUF, or as a separate "*mtp*.gguf" next to it
         $sidecar = Get-ChildItem (Split-Path $Model) -Filter *.gguf |
             Where-Object { $_.Name -match "mtp" -and $_.FullName -ne $Model } | Select-Object -First 1
