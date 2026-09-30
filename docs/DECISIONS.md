@@ -91,3 +91,20 @@ Phase 2 at `--n-cpu-moe 33`, 4K-token prompt:
   `fetch_url` returns 8000 characters per call with paging; `web_search` returns 5 results by default;
   system prompt sets a research budget and "never repeat an identical tool call".
 - **Revisit when:** loops persist (raise presence penalty toward 1.5, or try `-NoThink`).
+
+## 2026-09-30 - Evaluated: a bigger/smarter model, pruned to coding only
+Hardware limits: ~34 GB usable for weights (8 GB VRAM + 32 GB RAM minus OS), and generation speed is set by the
+active parameters read per token (DDR5 bandwidth). Candidates:
+| Model | Total / active | SWE-bench V. | Fits after pruning? | Speed here |
+|---|---|---|---|---|
+| Qwen3.6-35B-A3B (current) | 35B / 3B | 73.4 | yes, unpruned | ~48 tok/s |
+| Qwen3-Coder-Next | 80B / 3B | 70.6-74.2 (sources differ) | only at ~50% expert pruning (~24 GB Q4) | similar |
+| Qwen3.6-27B / Qwen3.8-27B (dense) | 27B / 27B | 77.2 (3.6) | yes | ~4-5 tok/s (every weight read per token) |
+| MiniMax M2.5 | 229B / 10B | 80.2 | no (>100 GB at Q4) | would be ~3x slower |
+| Qwen3.8-Flash-Next | 125B (+51B n-gram emb.) / 6B | - | no (75 GB even at 1-bit) | - |
+- **Decision:** keep Qwen3.6-35B-A3B. Nothing that is clearly smarter fits at >= 30 tok/s. Pruning removes size,
+  not intelligence: it only helps if it lets a *bigger* model fit, and the one that would fit (Coder-Next) is
+  not better on benchmarks.
+- **Next:** build the Java eval suite first, so model choices (and a possible Coder-Next REAP-50 experiment)
+  are decided by measurements on our tasks, not by public benchmark numbers.
+- **Revisit when:** a new MoE with <= ~5B active and a clearly higher coding score ships in the 35-80B range.
