@@ -7,8 +7,8 @@ commands as an agent, so no IDE extension is needed.
 ## OpenCode (recommended)
 
 1. Install: `npm install -g opencode-ai` (needs Node.js), or see the OpenCode docs for other installers.
-2. Copy `opencode.json` from this folder to `%USERPROFILE%\.config\opencode\opencode.json` (global) or into
-   a Java project's root (per project). Replace `C:/path/to/NepcodeLLM` with your clone path (forward slashes are fine).
+2. Run `powershell -ExecutionPolicy Bypass -File scripts\windows\install-opencode.ps1` (from the repo folder).
+   It writes `%USERPROFILE%\.config\opencode\opencode.json` with this repo's paths filled in.
 3. Start the model (`scripts\windows\serve.ps1`), then run `opencode` in your project folder. (SearXNG in Docker is
    optional; without it web search uses the built-in ddgs backend.)
 
